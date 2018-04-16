@@ -13,3 +13,4 @@ lsh-test-*
 *.obj
 *.lst
 lsh
+!/source/lsh/
