@@ -12,3 +12,4 @@ lsh-test-*
 *.o
 *.obj
 *.lst
+lsh
