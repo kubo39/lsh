@@ -3,6 +3,8 @@ module lsh.builtin;
 import std.file : chdir;
 import std.stdio;
 
+alias BuiltinFunction = int function(string[]);
+
 int builtinCd(string[] args)
 {
     if (args.length < 2)
@@ -34,7 +36,7 @@ int builtinExit(string[] args)
 class Builtins
 {
     // Builtins should A-Z order.
-    int function(string[])[string] builtinMap;
+    BuiltinFunction[string] builtinMap;
 
     this()
     {
@@ -50,7 +52,7 @@ class Builtins
         return this.builtinMap.keys();
     }
 
-    int function(string[]) get(string builtin)
+    BuiltinFunction get(string builtin)
     {
         return this.builtinMap[builtin];
     }
