@@ -51,4 +51,9 @@ class Shell
         this.launch(args);
         return 1;
     }
+
+    void displayVersion()
+    {
+        stdout.writeln("lsh/0.0.1");
+    }
 }
