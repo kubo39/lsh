@@ -1,0 +1,14 @@
+.dub
+docs.json
+__dummy.html
+docs/
+lsh.so
+lsh.dylib
+lsh.dll
+lsh.a
+lsh.lib
+lsh-test-*
+*.exe
+*.o
+*.obj
+*.lst

@@ -1,0 +1,9 @@
+{
+	"name": "lsh",
+	"authors": [
+		"Hiroki Noda"
+	],
+	"description": "Write a shell in D.",
+	"copyright": "Copyright © 2018, Hiroki Noda",
+	"license": "BSD-1.0"
+}
