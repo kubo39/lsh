@@ -1,7 +1,7 @@
 module lsh.shell;
 
+import core.stdc.stdlib : exit;
 import lsh.builtin;
-
 import std.stdio;
 import std.string : cmp, split;
 
@@ -55,5 +55,6 @@ class Shell
     void displayVersion()
     {
         stdout.writeln("lsh/0.0.1");
+        exit(0);
     }
 }
