@@ -1,36 +1,40 @@
 module lsh.builtin;
 
+import lsh.shell : Shell;
 import std.file : chdir;
 import std.stdio;
 
-alias BuiltinFunction = int function(string[]);
+alias BuiltinFunction = int function(string[], Shell);
 
-int builtinCd(string[] args)
+int builtinCd(string[] args, Shell shell)
 {
     if (args.length < 2)
     {
         stderr.writeln(`lsh: expected argument to "cd"`);
+        return 1;
     }
     else
     {
         chdir(args[1]);
     }
-    return 1;
+    return 0;
 }
 
-int builtinHelp(string[] args)
+int builtinHelp(string[] args, Shell shell)
 {
     stdout.writeln(`
 This is D port of Stephen Brennan's LSH.
 Type program names and arguments, and hit enter.
 Use the man command for information on other programs.
 `);
-    return 1;
+    return 0;
 }
 
-int builtinExit(string[] args)
+int builtinExit(string[] args, Shell shell)
 {
-    return 0;
+    auto previousStatus = shell.previousStatus;
+    shell.exit(previousStatus);
+    assert(0);
 }
 
 class Builtins
