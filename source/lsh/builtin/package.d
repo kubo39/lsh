@@ -2,7 +2,7 @@ module lsh.builtin;
 
 import lsh.builtin.echo;
 import lsh.shell : Shell;
-import std.file : chdir;
+import std.file : chdir, FileException;
 import std.stdio;
 
 alias BuiltinFunction = int function(string[], Shell);
@@ -16,7 +16,14 @@ int builtinCd(string[] args, Shell shell)
     }
     else
     {
-        chdir(args[1]);
+        try
+        {
+            chdir(args[1]);
+        }
+        catch (FileException _)
+        {
+            return 1;
+        }
     }
     return 0;
 }
