@@ -2,6 +2,7 @@ module lsh.shell;
 
 import core.stdc.stdlib : exit;
 import lsh.builtin;
+import std.file : getcwd;
 import std.stdio;
 import std.string : cmp, split;
 
@@ -19,7 +20,8 @@ class Shell
         int status;
         do
         {
-            write("> ");
+            auto cwd = getcwd();
+            writef("%s > ", cwd);
             auto line = readln();
             auto args = line.split();
             status = this.execute(args);
