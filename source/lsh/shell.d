@@ -2,7 +2,7 @@ module lsh.shell;
 
 import core.stdc.stdlib : exit;
 import lsh.builtin;
-import std.file : getcwd;
+import lsh.util;
 import std.stdio;
 import std.string : cmp, split;
 
