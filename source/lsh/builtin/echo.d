@@ -1,12 +1,9 @@
-module lsh.builtin;
+module lsh.builtin.echo;
 
 import lsh.shell : Shell;
 import std.algorithm : startsWith;
-import std.file : chdir;
-import std.stdio;
+import std.stdio : stdout;
 import std.typecons : BitFlags;
-
-alias BuiltinFunction = int function(string[], Shell);
 
 enum EchoFlags
 {
@@ -15,37 +12,6 @@ enum EchoFlags
 }
 
 alias Flags = BitFlags!EchoFlags;
-
-int builtinCd(string[] args, Shell shell)
-{
-    if (args.length < 2)
-    {
-        stderr.writeln(`lsh: expected argument to "cd"`);
-        return 1;
-    }
-    else
-    {
-        chdir(args[1]);
-    }
-    return 0;
-}
-
-int builtinHelp(string[] args, Shell shell)
-{
-    stdout.writeln(`
-This is D port of Stephen Brennan's LSH.
-Type program names and arguments, and hit enter.
-Use the man command for information on other programs.
-`);
-    return 0;
-}
-
-int builtinExit(string[] args, Shell shell)
-{
-    auto previousStatus = shell.previousStatus;
-    shell.exit(previousStatus);
-    assert(0);
-}
 
 int builtinEcho(string[] args, Shell shell)
 {
@@ -189,30 +155,4 @@ int builtinEcho(string[] args, Shell shell)
         buffer.put("\n");
     stdout.flush();
     return 0;
-}
-
-class Builtins
-{
-    // Builtins should A-Z order.
-    BuiltinFunction[string] builtinMap;
-
-    this()
-    {
-        this.builtinMap = [
-            "cd": &builtinCd,
-            "echo": &builtinEcho,
-            "exit": &builtinExit,
-            "help": &builtinHelp,
-            ];
-    }
-
-    string[] keys()
-    {
-        return this.builtinMap.keys();
-    }
-
-    BuiltinFunction get(string builtin)
-    {
-        return this.builtinMap[builtin];
-    }
 }
