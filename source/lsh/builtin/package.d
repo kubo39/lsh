@@ -2,6 +2,7 @@ module lsh.builtin;
 
 import lsh.builtin.echo;
 import lsh.shell : Shell;
+import lsh.util : getHomeDir;
 import std.file : chdir, FileException;
 import std.stdio;
 
@@ -9,21 +10,14 @@ alias BuiltinFunction = int function(string[], Shell);
 
 int builtinCd(string[] args, Shell shell)
 {
-    if (args.length < 2)
+    auto targetDir = args.length < 2 ? getHomeDir : args[1];
+    try
     {
-        stderr.writeln(`lsh: expected argument to "cd"`);
-        return 1;
+        chdir(targetDir);
     }
-    else
+    catch (FileException _)
     {
-        try
-        {
-            chdir(args[1]);
-        }
-        catch (FileException _)
-        {
-            return 1;
-        }
+        return 1;
     }
     return 0;
 }
