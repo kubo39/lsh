@@ -2,7 +2,6 @@ module lsh.builtin;
 
 import lsh.shell : Shell;
 import std.algorithm : startsWith;
-import std.conv : to;
 import std.file : chdir;
 import std.stdio;
 import std.typecons : BitFlags;
@@ -106,7 +105,7 @@ int builtinEcho(string[] args, Shell shell)
                 case 'a':
                     if (check)
                     {
-                        buffer.put(7.to!char); // bell.
+                        buffer.put(char(7)); // bell.
                         check = false;
                         break;
                     }
@@ -114,7 +113,7 @@ int builtinEcho(string[] args, Shell shell)
                 case 'b':
                     if (check)
                     {
-                        buffer.put(8.to!char); // backspace.
+                        buffer.put(char(8)); // backspace.
                         check = false;
                         break;
                     }
@@ -129,7 +128,7 @@ int builtinEcho(string[] args, Shell shell)
                 case 'e':
                     if (check)
                     {
-                        buffer.put(27.to!char); // escape.
+                        buffer.put(char(27)); // escape.
                         check = false;
                         break;
                     }
@@ -137,7 +136,7 @@ int builtinEcho(string[] args, Shell shell)
                 case 'f':
                     if (check)
                     {
-                        buffer.put(12.to!char); // form feed.
+                        buffer.put(char(12)); // form feed.
                         check = false;
                         break;
                     }
@@ -169,7 +168,7 @@ int builtinEcho(string[] args, Shell shell)
                 case 'v':
                     if (check)
                     {
-                        buffer.put(11.to!char); // vertival tab.
+                        buffer.put(char(11)); // vertival tab.
                         check = false;
                         break;
                     }
