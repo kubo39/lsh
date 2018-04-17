@@ -5,5 +5,5 @@
 	],
 	"description": "Write a shell in D.",
 	"copyright": "Copyright © 2018, Hiroki Noda",
-	"license": "BSD-1.0"
+	"license": "BSL-1.0"
 }
