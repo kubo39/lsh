@@ -8,7 +8,7 @@ import std.string : cmp, fromStringz;
 string getcwd()
 {
     import std.file;
-    auto cwd = std.file.getcwd;
+    auto cwd = std.file.getcwd();
     return tildeAbbr(cwd);
 }
 
