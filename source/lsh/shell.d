@@ -3,12 +3,19 @@ module lsh.shell;
 import core.stdc.stdlib : exit;
 import lsh.builtin;
 import lsh.util;
+import std.format : format;
 import std.process : Pid, spawnProcess, wait;
 import std.stdio;
 import std.string : cmp, split;
 
+alias PromptFn = string function();
+
 class Shell
 {
+private:
+    PromptFn prompt;
+
+public:
     Builtins builtins;
     int previousStatus;
 
@@ -16,14 +23,19 @@ class Shell
     {
         this.builtins = new Builtins();
         this.previousStatus = 0;
+        this.prompt = () => format("%s > ", getcwd());
+    }
+
+    void setPrompt(PromptFn prompt)
+    {
+        this.prompt = prompt;
     }
 
     void loop()
     {
         while (true)
         {
-            auto cwd = getcwd();
-            writef("%s > ", cwd);
+            write(prompt());
             auto line = readln();
             auto args = line.split();
             previousStatus = this.execute(args);

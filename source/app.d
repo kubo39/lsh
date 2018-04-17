@@ -18,5 +18,6 @@ void main(string[] args)
         }
     }
 
+    lsh.setPrompt(() => " > ");
     lsh.loop();
 }
