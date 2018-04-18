@@ -2,13 +2,14 @@ module lsh.shell;
 
 import core.stdc.stdlib : exit;
 import lsh.builtin;
+import lsh.colors;
 import lsh.util;
 import std.format : format;
 import std.process : Pid, spawnProcess, wait;
 import std.stdio;
 import std.string : cmp, split;
 
-alias PromptFn = string function();
+alias PromptFn = string function(int);
 
 class Shell
 {
@@ -23,7 +24,9 @@ public:
     {
         this.builtins = new Builtins();
         this.previousStatus = 0;
-        this.prompt = () => format("%s > ", getcwd());
+        this.prompt = (int status) => status == 0
+            ? format("\033[%sm%s > \033[%sm", COLORS["green"], getcwd(), COLORS["white"])
+            : format("\033[%sm%s > \033[%sm", COLORS["red"], getcwd(), COLORS["white"]);
     }
 
     void setPrompt(PromptFn prompt)
@@ -35,7 +38,7 @@ public:
     {
         while (true)
         {
-            write(prompt());
+            write(prompt(previousStatus));
             auto line = readln();
             auto args = line.split();
             previousStatus = this.execute(args);
