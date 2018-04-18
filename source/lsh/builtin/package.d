@@ -39,6 +39,29 @@ int builtinExit(string[] args, Shell shell)
     assert(0);
 }
 
+int builtinIsatty(string[] args, Shell _)
+{
+    import core.sys.posix.unistd : isatty;
+    import std.conv : ConvException, parse;
+
+    if (args.length > 1)
+    {
+        try
+        {
+            auto fd = parse!int(args[0]);
+            return isatty(fd);
+        }
+        catch (ConvException _)
+        {
+            return 1;
+        }
+    }
+    else
+    {
+        return 1;
+    }
+}
+
 class Builtins
 {
     // Builtins should A-Z order.
@@ -51,6 +74,7 @@ class Builtins
             "echo": &builtinEcho,
             "exit": &builtinExit,
             "help": &builtinHelp,
+            "isatty": &builtinIsatty,
             ];
     }
 
