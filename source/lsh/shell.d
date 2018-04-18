@@ -47,10 +47,9 @@ public:
 
     int launch(string[] args)
     {
-        Pid pid;
         try
         {
-            pid = spawnProcess(args);
+            Pid pid = spawnProcess(args);
             return wait(pid);
         }
         catch (Exception e)
@@ -63,7 +62,7 @@ public:
     {
         if (args.length < 1)
         {
-            return 1;
+            return 0;
         }
 
         foreach (builtin; this.builtins.keys())
