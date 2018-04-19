@@ -249,7 +249,7 @@ void editBackspace(State state)
     {
         state.line.pos--;
         state.len--;
-        state.line.buffer = state.line.buffer[0 .. state.line.pos];
+        state.line.buffer.replaceInPlace(state.line.pos, state.line.pos+1, cast(char[]) []);
         refreshLine(state);
     }
 }
@@ -277,6 +277,15 @@ void moveHome(State state)
     if (state.line.pos != 0)
     {
         state.line.pos = 0;
+        refreshLine(state);
+    }
+}
+
+void moveEnd(State state)
+{
+    if (state.line.pos != state.len)
+    {
+        state.line.pos = state.len;
         refreshLine(state);
     }
 }
@@ -329,6 +338,8 @@ char[] readlineEdit(string prompt)
             moveHome(state);
             break;
         case KEY_ACTION.CTRL_E:
+            moveEnd(state);
+            break;
         case KEY_ACTION.CTRL_L:
         case KEY_ACTION.CTRL_W:
             break;
