@@ -1,6 +1,7 @@
 module lsh.readline;
 
 import core.stdc.stdio : getchar;
+import core.stdc.string : memmove;
 import core.sys.posix.sys.ioctl;
 import core.sys.posix.termios;
 import core.sys.posix.unistd : isatty;
@@ -233,7 +234,6 @@ bool editInsert(State state, char c)
         }
         else
         {
-            import core.stdc.string : memmove;
             memmove(cast(void*) (&state.line+state.line.pos+1),
                     cast(void*) (&state.line+state.line.pos),
                     state.len - state.line.pos);
@@ -243,6 +243,20 @@ bool editInsert(State state, char c)
         }
     }
     return true;
+}
+
+void editBackspace(State state)
+{
+    if (state.line.pos > 0 && state.len > 0)
+    {
+        memmove(cast(void*) (&state.line+state.line.pos-1),
+                cast(void*) (&state.line+state.line.pos),
+                state.len - state.line.pos);
+        state.line.pos--;
+        state.len--;
+        state.line.buffer.shrinkTo(state.len);
+        refreshLine(state);
+    }
 }
 
 char[] readlineEdit(string prompt)
@@ -258,8 +272,11 @@ char[] readlineEdit(string prompt)
         case KEY_ACTION.ENTER:
             return state.line.buffer.data;
         case KEY_ACTION.CTRL_C:
+            return ['^', 'C'];
         case KEY_ACTION.BACKSPACE:
         case KEY_ACTION.CTRL_H:
+            editBackspace(state);
+            break;
         case KEY_ACTION.CTRL_D:
         case KEY_ACTION.CTRL_T:
         case KEY_ACTION.CTRL_B:
