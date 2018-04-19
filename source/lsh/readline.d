@@ -187,8 +187,7 @@ void refreshLine(State state)
     // display the prompt.
     ab.put(state.prompt);
     // and buffer.
-    if (state.line.buffer.data !is null)
-        ab.put(state.line.buffer.data);
+    ab.put(state.line.buffer);
     // Erase to right.
     ab.put("\x1b[0K");
     // move cursor to original position.
@@ -201,24 +200,25 @@ void refreshLine(State state)
 
 class LineBuffer
 {
-    Appender!(char[]) buffer;
+    char[] buffer;
     size_t pos;
 
     this()
     {
-        this.buffer = appender!(char[])();
+        this.buffer = [];
+        this.buffer.reserve(80);
         this.pos = 0;
     }
 
     void put(char c)
     {
-        this.buffer.put(c);
+        this.buffer ~= c;
         this.pos++;
     }
 
     void clear()
     {
-        this.buffer.clear();
+        this.buffer = [];
         this.pos = 0;
     }
 }
@@ -235,10 +235,8 @@ bool editInsert(State state, char c)
         }
         else
         {
-            memmove(cast(void*) (&state.line+state.line.pos+1),
-                    cast(void*) (&state.line+state.line.pos),
-                    state.len - state.line.pos);
-            state.line.put(c);
+            state.line.buffer.insertInPlace(state.line.pos, [c]);
+            state.line.pos++;
             state.len++;
             refreshLine(state);
         }
@@ -250,12 +248,9 @@ void editBackspace(State state)
 {
     if (state.line.pos > 0 && state.len > 0)
     {
-        memmove(cast(void*) (&state.line+state.line.pos-1),
-                cast(void*) (&state.line+state.line.pos),
-                state.len - state.line.pos);
         state.line.pos--;
         state.len--;
-        state.line.buffer.shrinkTo(state.len);
+        state.line.buffer = state.line.buffer[0 .. state.len];
         refreshLine(state);
     }
 }
@@ -289,7 +284,7 @@ char[] readlineEdit(string prompt)
         switch (c)
         {
         case KEY_ACTION.ENTER:
-            return state.line.buffer.data;
+            return state.line.buffer;
         case KEY_ACTION.CTRL_C:
             return ['^', 'C'];
         case KEY_ACTION.BACKSPACE:
