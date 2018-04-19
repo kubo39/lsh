@@ -321,7 +321,10 @@ char[] readlineEdit(string prompt)
             refreshLine(state);
             break;
         case KEY_ACTION.CTRL_K:
-            return null;
+            state.line.buffer = state.line.buffer[0 .. state.line.pos];
+            state.len = state.line.pos;
+            refreshLine(state);
+            break;
         case KEY_ACTION.CTRL_A:
             moveHome(state);
             break;
