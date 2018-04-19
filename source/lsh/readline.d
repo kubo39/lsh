@@ -273,6 +273,15 @@ void moveRight(State state)
     }
 }
 
+void moveHome(State state)
+{
+    if (state.line.pos != 0)
+    {
+        state.line.pos = 0;
+        refreshLine(state);
+    }
+}
+
 char[] readlineEdit(string prompt)
 {
     auto state = new State(prompt);
@@ -312,7 +321,10 @@ char[] readlineEdit(string prompt)
             refreshLine(state);
             break;
         case KEY_ACTION.CTRL_K:
+            return null;
         case KEY_ACTION.CTRL_A:
+            moveHome(state);
+            break;
         case KEY_ACTION.CTRL_E:
         case KEY_ACTION.CTRL_L:
         case KEY_ACTION.CTRL_W:
