@@ -187,7 +187,8 @@ void refreshLine(State state)
     // display the prompt.
     ab.put(state.prompt);
     // and buffer.
-    ab.put(state.line.buffer.data);
+    if (state.line.buffer.data !is null)
+        ab.put(state.line.buffer.data);
     // Erase to right.
     ab.put("\x1b[0K");
     // move cursor to original position.
@@ -259,6 +260,24 @@ void editBackspace(State state)
     }
 }
 
+void moveLeft(State state)
+{
+    if (state.line.pos > 0)
+    {
+        state.line.pos--;
+        refreshLine(state);
+    }
+}
+
+void moveRight(State state)
+{
+    if (state.line.pos != state.len)
+    {
+        state.line.pos++;
+        refreshLine(state);
+    }
+}
+
 char[] readlineEdit(string prompt)
 {
     auto state = new State(prompt);
@@ -279,8 +298,13 @@ char[] readlineEdit(string prompt)
             break;
         case KEY_ACTION.CTRL_D:
         case KEY_ACTION.CTRL_T:
+            return null;
         case KEY_ACTION.CTRL_B:
+            moveLeft(state);
+            break;
         case KEY_ACTION.CTRL_F:
+            moveRight(state);
+            break;
         case KEY_ACTION.CTRL_P:
         case KEY_ACTION.CTRL_N:
         case KEY_ACTION.ESC:
