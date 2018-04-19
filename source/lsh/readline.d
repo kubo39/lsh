@@ -173,6 +173,11 @@ size_t width(string input)
     return removeCodes(input).walkLength;
 }
 
+void clearScreen()
+{
+    write("\x1b[H\x1b[2J");
+}
+
 void refreshLine(State state)
 {
     auto plen = width(state.prompt);
@@ -341,6 +346,9 @@ char[] readlineEdit(string prompt)
             moveEnd(state);
             break;
         case KEY_ACTION.CTRL_L:
+            clearScreen();
+            refreshLine(state);
+            break;
         case KEY_ACTION.CTRL_W:
             break;
         }
