@@ -1,7 +1,6 @@
 module lsh.readline;
 
 import core.stdc.stdio : getchar;
-import core.stdc.string : memmove;
 import core.sys.posix.sys.ioctl;
 import core.sys.posix.termios;
 import core.sys.posix.unistd : isatty;
