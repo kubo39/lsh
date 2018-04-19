@@ -249,7 +249,7 @@ void editBackspace(State state)
     {
         state.line.pos--;
         state.len--;
-        state.line.buffer = state.line.buffer[0 .. state.len];
+        state.line.buffer = state.line.buffer[0 .. state.line.pos];
         refreshLine(state);
     }
 }
@@ -300,8 +300,9 @@ char[] readlineEdit(string prompt)
             editBackspace(state);
             break;
         case KEY_ACTION.CTRL_D:
-        case KEY_ACTION.CTRL_T:
             return null;
+        case KEY_ACTION.CTRL_T:
+            break;
         case KEY_ACTION.CTRL_B:
             moveLeft(state);
             break;
@@ -311,7 +312,7 @@ char[] readlineEdit(string prompt)
         case KEY_ACTION.CTRL_P:
         case KEY_ACTION.CTRL_N:
         case KEY_ACTION.ESC:
-            return null;
+            break;
         default:
             editInsert(state, c);
             break;
@@ -330,7 +331,7 @@ char[] readlineEdit(string prompt)
         case KEY_ACTION.CTRL_E:
         case KEY_ACTION.CTRL_L:
         case KEY_ACTION.CTRL_W:
-            return null;
+            break;
         }
     }
     assert(false);
