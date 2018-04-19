@@ -199,25 +199,25 @@ void refreshLine(State state)
 
 class LineBuffer
 {
-    Appender!string buffer;
+    Appender!(char[]) buffer;
     size_t pos;
 
     this()
     {
-        this.buffer = appender!string();
+        this.buffer = appender!(char[])();
         this.pos = 0;
-    }
-
-    void put(string s)
-    {
-        this.buffer.put(s);
-        this.pos += s.length;
     }
 
     void put(char c)
     {
         this.buffer.put(c);
         this.pos++;
+    }
+
+    void clear()
+    {
+        this.buffer.clear();
+        this.pos = 0;
     }
 }
 
@@ -245,7 +245,7 @@ bool editInsert(State state, char c)
     return true;
 }
 
-string readlineEdit(string prompt)
+char[] readlineEdit(string prompt)
 {
     auto state = new State(prompt);
     write(prompt);
@@ -272,6 +272,9 @@ string readlineEdit(string prompt)
             editInsert(state, c);
             break;
         case KEY_ACTION.CTRL_U:
+            state.line.clear();
+            refreshLine(state);
+            break;
         case KEY_ACTION.CTRL_K:
         case KEY_ACTION.CTRL_A:
         case KEY_ACTION.CTRL_E:
@@ -287,7 +290,7 @@ string readlineRaw(string prompt)
 {
     if (!enableRawMode())
         return null;
-    auto s = readlineEdit(prompt);
+    auto s = cast(immutable) readlineEdit(prompt);
     disableRawMode();
     writeln();
     return s;
