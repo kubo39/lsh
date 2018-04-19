@@ -3,6 +3,7 @@ module lsh.shell;
 import core.stdc.stdlib : exit;
 import lsh.builtin;
 import lsh.colors;
+import lsh.readline;
 import lsh.util;
 import std.format : format;
 import std.process : Pid, spawnProcess, wait;
@@ -36,12 +37,11 @@ public:
 
     void loop()
     {
-        while (true)
+        string line;
+        while ((line = readline(this.prompt(this.previousStatus))) !is null)
         {
-            write(prompt(previousStatus));
-            auto line = readln();
-            auto args = line.split();
-            previousStatus = this.execute(args);
+            auto args = split(line);
+            this.previousStatus = this.execute(args);
         }
     }
 
