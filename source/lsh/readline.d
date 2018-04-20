@@ -259,6 +259,19 @@ void editBackspace(State state)
     }
 }
 
+void editDeletePrevWord(State state)
+{
+    size_t oldpos = state.line.pos;
+    while (state.line.pos != 0 && state.line.buffer[state.line.pos-1] == ' ')
+        state.line.pos--;
+    while (state.line.pos != 0 && state.line.buffer[state.line.pos-1] != ' ')
+        state.line.pos--;
+    size_t diff = oldpos - state.line.pos;
+    state.line.buffer.replaceInPlace(state.line.pos, oldpos, cast(char[]) []);
+    state.len -= diff;
+    refreshLine(state);
+}
+
 void moveLeft(State state)
 {
     if (state.line.pos > 0)
@@ -350,6 +363,7 @@ char[] readlineEdit(string prompt)
             refreshLine(state);
             break;
         case KEY_ACTION.CTRL_W:
+            editDeletePrevWord(state);
             break;
         }
     }
