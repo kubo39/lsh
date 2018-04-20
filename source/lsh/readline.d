@@ -259,6 +259,16 @@ void editBackspace(State state)
     }
 }
 
+void editDelete(State state)
+{
+    if (state.len > 0 && state.line.pos < state.len)
+    {
+        state.line.buffer.replaceInPlace(state.line.pos, state.line.pos+1, cast(char[]) []);
+        state.len--;
+        refreshLine(state);
+    }
+}
+
 void editDeletePrevWord(State state)
 {
     size_t oldpos = state.line.pos;
@@ -327,6 +337,11 @@ char[] readlineEdit(string prompt)
             editBackspace(state);
             break;
         case KEY_ACTION.CTRL_D:
+            if (state.len > 0)
+            {
+                editDelete(state);
+                break;
+            }
             return null;
         case KEY_ACTION.CTRL_T:
             break;
@@ -345,6 +360,7 @@ char[] readlineEdit(string prompt)
             break;
         case KEY_ACTION.CTRL_U:
             state.line.clear();
+            state.len = 0;
             refreshLine(state);
             break;
         case KEY_ACTION.CTRL_K:
