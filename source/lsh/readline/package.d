@@ -4,6 +4,7 @@ import core.stdc.stdio : getchar;
 import core.sys.posix.sys.ioctl;
 import core.sys.posix.termios;
 import core.sys.posix.unistd : isatty;
+import lsh.readline.linebuffer;
 import std.array;
 import std.format : format;
 import std.stdio; // write
@@ -200,31 +201,6 @@ void refreshLine(State state)
     // write and flush.
     write(ab.data);
     stdout.flush();
-}
-
-class LineBuffer
-{
-    char[] buffer;
-    size_t pos;
-
-    this()
-    {
-        this.buffer = [];
-        this.buffer.reserve(80);
-        this.pos = 0;
-    }
-
-    void put(char c)
-    {
-        this.buffer ~= c;
-        this.pos++;
-    }
-
-    void clear()
-    {
-        this.buffer = [];
-        this.pos = 0;
-    }
 }
 
 bool editInsert(State state, char c)
