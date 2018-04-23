@@ -4,6 +4,7 @@ import core.stdc.stdio : getchar;
 import core.sys.posix.sys.ioctl;
 import lsh.readline.linebuffer;
 import lsh.readline.terminal;
+import lsh.readline.util : width;
 import std.array;
 import std.format : format;
 import std.stdio; // write
@@ -31,8 +32,6 @@ enum KEY_ACTION
     BACKSPACE =  127,
 }
 
-
-
 int[2] getWindowSize()
 {
     auto size = winsize();
@@ -56,94 +55,17 @@ class State
     LineBuffer line;
     string prompt;
     size_t oldpos;
-    size_t len;
-    size_t buflen;
     int cols;
     size_t maxrows;
 
     this(string prompt)
     {
-        this.line = new LineBuffer();
+        this.line = new LineBuffer(80);
         this.prompt = prompt;
         this.oldpos = 0;
-        this.len = 0;
-        this.buflen = 0;
         this.cols = getColumns(stdin.fileno(), stdout.fileno());
         this.maxrows = 0;
     }
-}
-
-string removeCodes(string input)
-{
-    import std.algorithm : canFind;
-    if (input.canFind("\x1B"))
-    {
-        auto clean = appender!string();
-        enum AnsiState
-        {
-            Norm,
-            Esc,
-            Csi,
-            Osc,
-        }
-        AnsiState s = AnsiState.Norm;
-        foreach (c; input)
-        {
-            final switch (s)
-            {
-            case AnsiState.Norm:
-                if (c == '\x1B')
-                {
-                    s = AnsiState.Esc;
-                }
-                else
-                {
-                    clean.put(c);
-                }
-                break;
-            case AnsiState.Esc:
-                switch (c)
-                {
-                case '[':
-                    s = AnsiState.Csi;
-                    break;
-                case ']':
-                    s = AnsiState.Osc;
-                    break;
-                default:
-                    s = AnsiState.Norm;
-                    break;
-                }
-                break;
-            case AnsiState.Csi:
-                switch (c)
-                {
-                case 'A': .. case 'Z':
-                case 'a': .. case 'z':
-                    s = AnsiState.Norm;
-                    break;
-                default:
-                    break;
-                }
-                break;
-            case AnsiState.Osc:
-                if (c == '\x07')
-                    s = AnsiState.Norm;
-                break;
-            }
-        }
-        return clean.data;
-    }
-    else
-    {
-        return input;
-    }
-}
-
-size_t width(string input)
-{
-    import std.range : walkLength;
-    return removeCodes(input).walkLength;
 }
 
 void clearScreen()
@@ -153,8 +75,10 @@ void clearScreen()
 
 void refreshLine(State state)
 {
+    import std.uni;
+    import std.range;
+
     auto plen = width(state.prompt);
-    auto len = state.len;
     auto pos = state.line.pos;
 
     auto ab = appender!string();
@@ -177,31 +101,27 @@ void refreshLine(State state)
 
 bool editInsert(State state, char c)
 {
-    if (state.len < 1023)
+    if (state.line.buffer.length < 1023)  // :FIXME:
     {
-        if (state.len == state.line.pos)
+        if (state.line.buffer.length == state.line.pos)
         {
             state.line.put(c);
-            state.len++;
-            refreshLine(state);
         }
         else
         {
             state.line.buffer.insertInPlace(state.line.pos, [c]);
             state.line.pos++;
-            state.len++;
-            refreshLine(state);
         }
+        refreshLine(state);
     }
     return true;
 }
 
 void editBackspace(State state)
 {
-    if (state.line.pos > 0 && state.len > 0)
+    if (state.line.pos > 0 && state.line.buffer.length > 0)
     {
         state.line.pos--;
-        state.len--;
         state.line.buffer.replaceInPlace(state.line.pos, state.line.pos+1, cast(char[]) []);
         refreshLine(state);
     }
@@ -209,10 +129,9 @@ void editBackspace(State state)
 
 void editDelete(State state)
 {
-    if (state.len > 0 && state.line.pos < state.len)
+    if (state.line.buffer.length > 0 && state.line.pos < state.line.buffer.length)
     {
         state.line.buffer.replaceInPlace(state.line.pos, state.line.pos+1, cast(char[]) []);
-        state.len--;
         refreshLine(state);
     }
 }
@@ -226,7 +145,6 @@ void editDeletePrevWord(State state)
         state.line.pos--;
     size_t diff = oldpos - state.line.pos;
     state.line.buffer.replaceInPlace(state.line.pos, oldpos, cast(char[]) []);
-    state.len -= diff;
     refreshLine(state);
 }
 
@@ -241,7 +159,7 @@ void moveLeft(State state)
 
 void moveRight(State state)
 {
-    if (state.line.pos != state.len)
+    if (state.line.pos != state.line.buffer.length)
     {
         state.line.pos++;
         refreshLine(state);
@@ -250,20 +168,14 @@ void moveRight(State state)
 
 void moveHome(State state)
 {
-    if (state.line.pos != 0)
-    {
-        state.line.pos = 0;
+    if (state.line.moveHome())
         refreshLine(state);
-    }
 }
 
 void moveEnd(State state)
 {
-    if (state.line.pos != state.len)
-    {
-        state.line.pos = state.len;
+    if (state.line.moveEnd())
         refreshLine(state);
-    }
 }
 
 char[] readlineEdit(string prompt)
@@ -285,7 +197,7 @@ char[] readlineEdit(string prompt)
             editBackspace(state);
             break;
         case KEY_ACTION.CTRL_D:
-            if (state.len > 0)
+            if (state.line.buffer.length > 0)
             {
                 editDelete(state);
                 break;
@@ -308,12 +220,10 @@ char[] readlineEdit(string prompt)
             break;
         case KEY_ACTION.CTRL_U:
             state.line.clear();
-            state.len = 0;
             refreshLine(state);
             break;
         case KEY_ACTION.CTRL_K:
             state.line.buffer = state.line.buffer[0 .. state.line.pos];
-            state.len = state.line.pos;
             refreshLine(state);
             break;
         case KEY_ACTION.CTRL_A:
