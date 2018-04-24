@@ -1,13 +1,17 @@
 module lsh.readline.linebuffer;
 
+import std.array : insertInPlace;
+import std.utf;
+
 class LineBuffer
 {
-    char[] buffer;
+    string buffer;
+    size_t cap;
     size_t pos;  // Current cursor position.
 
     this(size_t cap)
     {
-        this.buffer = [];
+        this.cap = cap;
         this.buffer.reserve(cap);
         this.pos = 0;
     }
@@ -22,6 +26,36 @@ class LineBuffer
     {
         this.buffer = [];
         this.pos = 0;
+    }
+
+    size_t length() @property
+    {
+        return this.buffer.length;
+    }
+
+    bool insert(dchar c)
+    {
+        auto shift = c.codeLength!char();
+        if (this.length + shift > cap)
+            return false;
+
+        auto push = this.pos == this.length;
+        import std.stdio;
+        if (push)
+        {
+            this.buffer ~= c;
+            this.pos += shift;
+        }
+        else
+        {
+            writeln("*insert into buffer*");
+            writeln("this.pos: ", this.pos);
+            writeln("len: ", this.length);
+            this.buffer.insertInPlace(this.pos, [c]);
+            writeln("update position");
+            this.pos += shift;
+        }
+        return true;
     }
 
     bool moveHome()

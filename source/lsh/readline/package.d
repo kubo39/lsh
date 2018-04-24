@@ -75,9 +75,6 @@ void clearScreen()
 
 void refreshLine(State state)
 {
-    import std.uni;
-    import std.range;
-
     auto plen = width(state.prompt);
     auto pos = state.line.pos;
 
@@ -99,27 +96,15 @@ void refreshLine(State state)
     stdout.flush();
 }
 
-bool editInsert(State state, char c)
+void editInsert(State state, dchar c)
 {
-    if (state.line.buffer.length < 1023)  // :FIXME:
-    {
-        if (state.line.buffer.length == state.line.pos)
-        {
-            state.line.put(c);
-        }
-        else
-        {
-            state.line.buffer.insertInPlace(state.line.pos, [c]);
-            state.line.pos++;
-        }
+    if (state.line.insert(c))
         refreshLine(state);
-    }
-    return true;
 }
 
 void editBackspace(State state)
 {
-    if (state.line.pos > 0 && state.line.buffer.length > 0)
+    if (state.line.pos > 0 && state.line.length > 0)
     {
         state.line.pos--;
         state.line.buffer.replaceInPlace(state.line.pos, state.line.pos+1, cast(char[]) []);
@@ -129,7 +114,7 @@ void editBackspace(State state)
 
 void editDelete(State state)
 {
-    if (state.line.buffer.length > 0 && state.line.pos < state.line.buffer.length)
+    if (state.line.length > 0 && state.line.pos < state.line.length)
     {
         state.line.buffer.replaceInPlace(state.line.pos, state.line.pos+1, cast(char[]) []);
         refreshLine(state);
@@ -159,7 +144,7 @@ void moveLeft(State state)
 
 void moveRight(State state)
 {
-    if (state.line.pos != state.line.buffer.length)
+    if (state.line.pos != state.line.length)
     {
         state.line.pos++;
         refreshLine(state);
@@ -178,14 +163,15 @@ void moveEnd(State state)
         refreshLine(state);
 }
 
-char[] readlineEdit(string prompt)
+string readlineEdit(string prompt)
 {
     auto state = new State(prompt);
     write(prompt);
 
     while (true)
     {
-        auto c = cast(char) getchar();
+        dchar c;
+        stdin.readf!"%s"(c);
         switch (c)
         {
         case KEY_ACTION.ENTER:
@@ -197,7 +183,7 @@ char[] readlineEdit(string prompt)
             editBackspace(state);
             break;
         case KEY_ACTION.CTRL_D:
-            if (state.line.buffer.length > 0)
+            if (state.line.length > 0)
             {
                 editDelete(state);
                 break;
