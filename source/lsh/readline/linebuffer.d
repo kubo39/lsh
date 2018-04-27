@@ -1,6 +1,7 @@
 module lsh.readline.linebuffer;
 
 import std.array : insertInPlace;
+import std.range : walkLength;
 import std.utf;
 
 class LineBuffer
@@ -16,12 +17,6 @@ class LineBuffer
         this.pos = 0;
     }
 
-    void put(char c)
-    {
-        this.buffer ~= c;
-        this.pos++;
-    }
-
     void clear()
     {
         this.buffer = [];
@@ -33,26 +28,20 @@ class LineBuffer
         return this.buffer.length;
     }
 
-    bool insert(dchar c)
+    bool insert(string c)
     {
-        auto shift = c.codeLength!char();
+        auto shift = c.length;
         if (this.length + shift > cap)
             return false;
 
-        auto push = this.pos == this.length;
-        import std.stdio;
-        if (push)
+        if (this.pos == this.length)
         {
             this.buffer ~= c;
             this.pos += shift;
         }
         else
         {
-            writeln("*insert into buffer*");
-            writeln("this.pos: ", this.pos);
-            writeln("len: ", this.length);
-            this.buffer.insertInPlace(this.pos, [c]);
-            writeln("update position");
+            this.buffer.insertInPlace(this.pos, c);
             this.pos += shift;
         }
         return true;

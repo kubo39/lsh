@@ -96,7 +96,7 @@ void refreshLine(State state)
     stdout.flush();
 }
 
-void editInsert(State state, dchar c)
+void editInsert(State state, string c)
 {
     if (state.line.insert(c))
         refreshLine(state);
@@ -163,6 +163,59 @@ void moveEnd(State state)
         refreshLine(state);
 }
 
+char[] readUnicodeCharacter()
+{
+    char[] tmp;
+
+    char c;
+    stdin.readf!"%c"(c);
+    if (c <= 0b01111111)  // short circuit ASCII.
+    {
+        tmp ~= c;
+        return tmp;
+    }
+    else if (c <= 0b11011111)
+    {
+        tmp ~= c;
+        tmp ~= char.init;
+        stdin.readf!"%c"(tmp[1]);
+        return tmp;
+    }
+    else if (c <= 0b11101111)
+    {
+        tmp ~= c;
+        tmp ~= char.init;
+        stdin.readf!"%c"(tmp[1]);
+        tmp ~= char.init;
+        stdin.readf!"%c"(tmp[2]);
+        return tmp;
+    }
+    else if (c <= 0b11110111)
+    {
+        tmp ~= c;
+        stdin.readf!"%c"(tmp[1]);
+        tmp ~= char.init;
+        stdin.readf!"%c"(tmp[2]);
+        tmp ~= char.init;
+        stdin.readf!"%c"(tmp[3]);
+        return tmp;
+    }
+    else if (c <= 0b11111011)
+    {
+        tmp ~= c;
+        tmp ~= char.init;
+        stdin.readf!"%c"(tmp[1]);
+        tmp ~= char.init;
+        stdin.readf!"%c"(tmp[2]);
+        tmp ~= char.init;
+        stdin.readf!"%c"(tmp[3]);
+        tmp ~= char.init;
+        stdin.readf!"%c"(tmp[4]);
+        return tmp;
+    }
+    else assert(false);
+}
+
 string readlineEdit(string prompt)
 {
     auto state = new State(prompt);
@@ -170,9 +223,8 @@ string readlineEdit(string prompt)
 
     while (true)
     {
-        dchar c;
-        stdin.readf!"%s"(c);
-        switch (c)
+        char[] chars = readUnicodeCharacter();
+        switch (chars[0])
         {
         case KEY_ACTION.ENTER:
             return state.line.buffer;
@@ -202,7 +254,7 @@ string readlineEdit(string prompt)
         case KEY_ACTION.ESC:
             break;
         default:
-            editInsert(state, c);
+            editInsert(state, cast(immutable) chars);
             break;
         case KEY_ACTION.CTRL_U:
             state.line.clear();
