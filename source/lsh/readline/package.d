@@ -104,12 +104,8 @@ void editInsert(State state, string c)
 
 void editBackspace(State state)
 {
-    if (state.line.pos > 0 && state.line.length > 0)
-    {
-        state.line.pos--;
-        state.line.buffer.replaceInPlace(state.line.pos, state.line.pos+1, cast(char[]) []);
+    if (state.line.backspace())
         refreshLine(state);
-    }
 }
 
 void editDelete(State state)
