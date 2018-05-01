@@ -83,8 +83,6 @@ class LineBuffer
         {
             auto oldPos = this.pos;
             auto pos = this.prevPos();
-            import std.stdio;
-            writeln("prevPos: ", pos);
             this.buffer.replaceInPlace(pos, oldPos, cast(char[]) []);
             this.pos = pos;
             return true;
