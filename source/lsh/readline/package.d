@@ -2,6 +2,7 @@ module lsh.readline;
 
 import core.stdc.stdio : getchar;
 import core.sys.posix.sys.ioctl;
+import eastasianwidth : displayWidth;
 import lsh.readline.linebuffer;
 import lsh.readline.terminal;
 import lsh.readline.util : width;
@@ -76,7 +77,7 @@ void clearScreen()
 void refreshLine(State state)
 {
     auto plen = width(state.prompt);
-    auto pos = state.line.pos;
+    auto pos = state.line.buffer[0 .. state.line.pos].displayWidth;
 
     auto ab = appender!string();
 
