@@ -1,27 +1,126 @@
 module lsh.readline.linebuffer;
 
+import std.algorithm : map;
+import std.array : array, insertInPlace, replaceInPlace;
+import std.conv : to;
+import std.range : drop, enumerate, retro, take, takeOne, walkLength;
+import std.uni : byGrapheme;
+
 class LineBuffer
 {
-    char[] buffer;
+    string buffer;
+    size_t cap;
     size_t pos;  // Current cursor position.
 
     this(size_t cap)
     {
-        this.buffer = [];
+        this.cap = cap;
         this.buffer.reserve(cap);
         this.pos = 0;
-    }
-
-    void put(char c)
-    {
-        this.buffer ~= c;
-        this.pos++;
     }
 
     void clear()
     {
         this.buffer = [];
         this.pos = 0;
+    }
+
+    size_t length() @property
+    {
+        return this.buffer.length;
+    }
+
+    bool insert(string c)
+    {
+        auto shift = c.length;
+        if (this.length + shift > cap)
+            return false;
+
+        if (this.pos == this.length)
+        {
+            this.buffer ~= c;
+            this.pos += shift;
+        }
+        else
+        {
+            this.buffer.insertInPlace(this.pos, c);
+            this.pos += shift;
+        }
+        return true;
+    }
+
+    size_t prevPos()
+    {
+        if (this.pos == 0)
+            return 0;
+        return this.buffer
+            .take(this.pos)
+            .byGrapheme()
+            .enumerate()
+            .array()
+            .retro()
+            .takeOne()[0][0];
+    }
+
+    size_t nextPos()
+    {
+        if (this.pos == this.buffer.length)
+            return this.pos;
+        return this.buffer
+            .drop(this.pos)
+            .byGrapheme()
+            .enumerate()
+            .array()
+            .retro()
+            .takeOne()
+            .map!(x => this.pos + x[1][0].to!string.length)
+            .takeOne()[0];
+    }
+
+    bool backspace()
+    {
+        if (this.pos > 0 && this.buffer.length > 0)
+        {
+            auto oldPos = this.pos;
+            auto pos = this.prevPos();
+            import std.stdio;
+            writeln("prevPos: ", pos);
+            this.buffer.replaceInPlace(pos, oldPos, cast(char[]) []);
+            this.pos = pos;
+            return true;
+        }
+        return false;
+    }
+
+    bool editDelete()
+    {
+        if (this.buffer.length > 0 && this.pos < this.buffer.length)
+        {
+            auto cursorLen = this.nextPos();
+            this.buffer.replaceInPlace(this.pos, cursorLen, cast(char[]) []);
+            return true;
+        }
+        return false;
+    }
+
+    bool moveLeft()
+    {
+        if (this.pos > 0)
+        {
+            this.pos = prevPos();
+            return true;
+        }
+        return false;
+    }
+
+    bool moveRight()
+    {
+        if (this.pos != this.buffer.length)
+        {
+            this.pos = nextPos();
+            return true;
+        }
+        return false;
     }
 
     bool moveHome()

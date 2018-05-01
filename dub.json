@@ -3,6 +3,9 @@
 	"authors": [
 		"Hiroki Noda"
 	],
+	"dependencies": {
+		"east_asian_width": "~>1.0.0"
+	},
 	"description": "Write a shell in D.",
 	"copyright": "Copyright © 2018, Hiroki Noda",
 	"license": "BSL-1.0"

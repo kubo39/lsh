@@ -2,6 +2,7 @@ module lsh.readline;
 
 import core.stdc.stdio : getchar;
 import core.sys.posix.sys.ioctl;
+import eastasianwidth : displayWidth;
 import lsh.readline.linebuffer;
 import lsh.readline.terminal;
 import lsh.readline.util : width;
@@ -75,11 +76,8 @@ void clearScreen()
 
 void refreshLine(State state)
 {
-    import std.uni;
-    import std.range;
-
     auto plen = width(state.prompt);
-    auto pos = state.line.pos;
+    auto pos = state.line.buffer[0 .. state.line.pos].displayWidth;
 
     auto ab = appender!string();
 
@@ -99,41 +97,22 @@ void refreshLine(State state)
     stdout.flush();
 }
 
-bool editInsert(State state, char c)
+void editInsert(State state, string c)
 {
-    if (state.line.buffer.length < 1023)  // :FIXME:
-    {
-        if (state.line.buffer.length == state.line.pos)
-        {
-            state.line.put(c);
-        }
-        else
-        {
-            state.line.buffer.insertInPlace(state.line.pos, [c]);
-            state.line.pos++;
-        }
+    if (state.line.insert(c))
         refreshLine(state);
-    }
-    return true;
 }
 
 void editBackspace(State state)
 {
-    if (state.line.pos > 0 && state.line.buffer.length > 0)
-    {
-        state.line.pos--;
-        state.line.buffer.replaceInPlace(state.line.pos, state.line.pos+1, cast(char[]) []);
+    if (state.line.backspace())
         refreshLine(state);
-    }
 }
 
 void editDelete(State state)
 {
-    if (state.line.buffer.length > 0 && state.line.pos < state.line.buffer.length)
-    {
-        state.line.buffer.replaceInPlace(state.line.pos, state.line.pos+1, cast(char[]) []);
+    if (state.line.editDelete())
         refreshLine(state);
-    }
 }
 
 void editDeletePrevWord(State state)
@@ -150,20 +129,14 @@ void editDeletePrevWord(State state)
 
 void moveLeft(State state)
 {
-    if (state.line.pos > 0)
-    {
-        state.line.pos--;
+    if (state.line.moveLeft())
         refreshLine(state);
-    }
 }
 
 void moveRight(State state)
 {
-    if (state.line.pos != state.line.buffer.length)
-    {
-        state.line.pos++;
+    if (state.line.moveRight())
         refreshLine(state);
-    }
 }
 
 void moveHome(State state)
@@ -178,15 +151,68 @@ void moveEnd(State state)
         refreshLine(state);
 }
 
-char[] readlineEdit(string prompt)
+char[] readUnicodeCharacter()
+{
+    char[] tmp;
+
+    char c;
+    stdin.readf!"%c"(c);
+    if (c <= 0b01111111)  // short circuit ASCII.
+    {
+        tmp ~= c;
+        return tmp;
+    }
+    else if (c <= 0b11011111)
+    {
+        tmp ~= c;
+        tmp ~= char.init;
+        stdin.readf!"%c"(tmp[1]);
+        return tmp;
+    }
+    else if (c <= 0b11101111)
+    {
+        tmp ~= c;
+        tmp ~= char.init;
+        stdin.readf!"%c"(tmp[1]);
+        tmp ~= char.init;
+        stdin.readf!"%c"(tmp[2]);
+        return tmp;
+    }
+    else if (c <= 0b11110111)
+    {
+        tmp ~= c;
+        stdin.readf!"%c"(tmp[1]);
+        tmp ~= char.init;
+        stdin.readf!"%c"(tmp[2]);
+        tmp ~= char.init;
+        stdin.readf!"%c"(tmp[3]);
+        return tmp;
+    }
+    else if (c <= 0b11111011)
+    {
+        tmp ~= c;
+        tmp ~= char.init;
+        stdin.readf!"%c"(tmp[1]);
+        tmp ~= char.init;
+        stdin.readf!"%c"(tmp[2]);
+        tmp ~= char.init;
+        stdin.readf!"%c"(tmp[3]);
+        tmp ~= char.init;
+        stdin.readf!"%c"(tmp[4]);
+        return tmp;
+    }
+    else assert(false);
+}
+
+string readlineEdit(string prompt)
 {
     auto state = new State(prompt);
     write(prompt);
 
     while (true)
     {
-        auto c = cast(char) getchar();
-        switch (c)
+        char[] chars = readUnicodeCharacter();
+        switch (chars[0])
         {
         case KEY_ACTION.ENTER:
             return state.line.buffer;
@@ -197,7 +223,7 @@ char[] readlineEdit(string prompt)
             editBackspace(state);
             break;
         case KEY_ACTION.CTRL_D:
-            if (state.line.buffer.length > 0)
+            if (state.line.length > 0)
             {
                 editDelete(state);
                 break;
@@ -216,7 +242,7 @@ char[] readlineEdit(string prompt)
         case KEY_ACTION.ESC:
             break;
         default:
-            editInsert(state, c);
+            editInsert(state, cast(immutable) chars);
             break;
         case KEY_ACTION.CTRL_U:
             state.line.clear();
