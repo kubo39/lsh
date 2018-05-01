@@ -111,11 +111,8 @@ void editBackspace(State state)
 
 void editDelete(State state)
 {
-    if (state.line.length > 0 && state.line.pos < state.line.length)
-    {
-        state.line.buffer.replaceInPlace(state.line.pos, state.line.pos+1, cast(char[]) []);
+    if (state.line.editDelete())
         refreshLine(state);
-    }
 }
 
 void editDeletePrevWord(State state)
@@ -132,20 +129,14 @@ void editDeletePrevWord(State state)
 
 void moveLeft(State state)
 {
-    if (state.line.pos > 0)
-    {
-        state.line.pos--;
+    if (state.line.moveLeft())
         refreshLine(state);
-    }
 }
 
 void moveRight(State state)
 {
-    if (state.line.pos != state.line.length)
-    {
-        state.line.pos++;
+    if (state.line.moveRight())
         refreshLine(state);
-    }
 }
 
 void moveHome(State state)

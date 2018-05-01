@@ -1,8 +1,10 @@
 module lsh.readline.linebuffer;
 
+import std.algorithm : map;
 import std.array : array, insertInPlace, replaceInPlace;
-import std.range : enumerate, retro, take, takeOne, walkLength;
-import std.utf;
+import std.conv : to;
+import std.range : drop, enumerate, retro, take, takeOne, walkLength;
+import std.uni : byGrapheme;
 
 class LineBuffer
 {
@@ -49,7 +51,6 @@ class LineBuffer
 
     size_t prevPos()
     {
-        import std.uni;
         if (this.pos == 0)
             return 0;
         return this.buffer
@@ -61,14 +62,62 @@ class LineBuffer
             .takeOne()[0][0];
     }
 
+    size_t nextPos()
+    {
+        if (this.pos == this.buffer.length)
+            return this.pos;
+        return this.buffer
+            .drop(this.pos)
+            .byGrapheme()
+            .enumerate()
+            .array()
+            .retro()
+            .takeOne()
+            .map!(x => this.pos + x[1][0].to!string.length)
+            .takeOne()[0];
+    }
+
     bool backspace()
     {
         if (this.pos > 0 && this.buffer.length > 0)
         {
             auto oldPos = this.pos;
-            auto pos = prevPos();
+            auto pos = this.prevPos();
+            import std.stdio;
+            writeln("prevPos: ", pos);
             this.buffer.replaceInPlace(pos, oldPos, cast(char[]) []);
             this.pos = pos;
+            return true;
+        }
+        return false;
+    }
+
+    bool editDelete()
+    {
+        if (this.buffer.length > 0 && this.pos < this.buffer.length)
+        {
+            auto cursorLen = this.nextPos();
+            this.buffer.replaceInPlace(this.pos, cursorLen, cast(char[]) []);
+            return true;
+        }
+        return false;
+    }
+
+    bool moveLeft()
+    {
+        if (this.pos > 0)
+        {
+            this.pos = prevPos();
+            return true;
+        }
+        return false;
+    }
+
+    bool moveRight()
+    {
+        if (this.pos != this.buffer.length)
+        {
+            this.pos = nextPos();
             return true;
         }
         return false;
