@@ -1,16 +1,13 @@
 module lsh.readline.linebuffer;
 
-import std.algorithm : map;
-import std.array : array, insertInPlace, replaceInPlace;
-import std.conv : to;
-import std.range : drop, enumerate, retro, take, takeOne, walkLength;
-import std.uni : byGrapheme;
+import std.array : insertInPlace, replaceInPlace;
+import std.uni : graphemeStride;
 
 class LineBuffer
 {
     string buffer;
-    size_t cap;
     size_t pos;  // Current cursor position.
+    size_t cap;
 
     this(size_t cap)
     {
@@ -49,32 +46,28 @@ class LineBuffer
         return true;
     }
 
-    size_t prevPos()
-    {
-        if (this.pos == 0)
-            return 0;
-        return this.buffer
-            .take(this.pos)
-            .byGrapheme()
-            .enumerate()
-            .array()
-            .retro()
-            .takeOne()[0][0];
-    }
-
     size_t nextPos()
     {
         if (this.pos == this.buffer.length)
             return this.pos;
-        return this.buffer
-            .drop(this.pos)
-            .byGrapheme()
-            .enumerate()
-            .array()
-            .retro()
-            .takeOne()
-            .map!(x => this.pos + x[1][0].to!string.length)
-            .takeOne()[0];
+        return this.pos + graphemeStride(this.buffer, this.pos);
+    }
+
+    size_t prevPos()
+    {
+        if (this.pos == 0)
+            return 0;
+
+        size_t prev = 0;
+        size_t next = 0;
+        while (true)
+        {
+            next += graphemeStride(this.buffer, prev);
+            if (next >= this.pos)
+                break;
+            prev += next;
+        }
+        return prev;
     }
 
     bool backspace()
