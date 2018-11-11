@@ -7,12 +7,10 @@ class LineBuffer
 {
     string buffer;
     size_t pos;  // Current cursor position.
-    size_t cap;
 
-    this(size_t cap)
+    this(size_t capacity)
     {
-        this.cap = cap;
-        this.buffer.reserve(cap);
+        this.buffer.reserve(capacity);
         this.pos = 0;
     }
 
@@ -30,7 +28,7 @@ class LineBuffer
     bool insert(string c)
     {
         auto shift = c.length;
-        if (this.length + shift > cap)
+        if (this.length + shift > this.buffer.capacity)
             return false;
 
         if (this.pos == this.length)
